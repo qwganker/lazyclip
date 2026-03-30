@@ -19,7 +19,7 @@ final class ClipboardMonitorTests: XCTestCase {
 
         let value = monitor.pollOnce()
 
-        XCTAssertEqual(value, "hello")
+        XCTAssertEqual(value, .text("hello"))
     }
 
     func testPollSkipsSelfWrittenClipboardValue() throws {
@@ -38,7 +38,7 @@ final class ClipboardMonitorTests: XCTestCase {
         monitor.copyToPasteboard("repeat value")
         pasteboard.setReadValue("repeat value", changeCount: 2)
 
-        XCTAssertEqual(monitor.pollOnce(), "repeat value")
+        XCTAssertEqual(monitor.pollOnce(), .text("repeat value"))
     }
 
     func testPollAcceptsLaterExternalCopyOfSameStringAfterSelfWriteIsConsumed() throws {
@@ -50,7 +50,7 @@ final class ClipboardMonitorTests: XCTestCase {
 
         pasteboard.setReadValue("repeat value", changeCount: 2)
 
-        XCTAssertEqual(monitor.pollOnce(), "repeat value")
+        XCTAssertEqual(monitor.pollOnce(), .text("repeat value"))
     }
 
     func testPollIgnoresEmptyClipboardStrings() throws {
@@ -60,5 +60,15 @@ final class ClipboardMonitorTests: XCTestCase {
         pasteboard.setReadValue("", changeCount: 1)
 
         XCTAssertNil(monitor.pollOnce())
+    }
+
+    func testPollReturnsImageWhenOnlyImageOnPasteboard() throws {
+        let pasteboard = PasteboardSpy()
+        let monitor = ClipboardMonitor(pasteboard: pasteboard, pollInterval: 0.5)
+
+        let imageData = Data([0x89, 0x50, 0x4E, 0x47])
+        pasteboard.setReadImageValue(imageData, changeCount: 1)
+
+        XCTAssertEqual(monitor.pollOnce(), .image(imageData))
     }
 }

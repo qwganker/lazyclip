@@ -20,6 +20,12 @@ struct SettingsView: View {
                     }
                 }
 
+                Picker("Image size limit", selection: imageSizeLimitBinding) {
+                    ForEach([5, 10, 20, 50, 100], id: \.self) { mb in
+                        Text("\(mb) MB").tag(mb)
+                    }
+                }
+
                 Button(role: .destructive) {
                     showsClearAllConfirmation.toggle()
                 } label: {
@@ -108,6 +114,19 @@ struct SettingsView: View {
         )
     }
 
+    private var imageSizeLimitBinding: Binding<Int> {
+        Binding(
+            get: { appState.settings.imageSizeLimitMB },
+            set: { mb in
+                do {
+                    try appState.updateImageSizeLimit(mb)
+                } catch {
+                    appState.storageErrorMessage = error.localizedDescription
+                }
+            }
+        )
+    }
+
     static func versionText(from infoDictionary: [String: Any]?) -> String {
         let version = (infoDictionary?["CFBundleShortVersionString"] as? String)?
             .trimmingCharacters(in: .whitespacesAndNewlines)
@@ -120,6 +139,6 @@ struct SettingsView: View {
     }
 
     static func formRowTitles(versionText: String) -> [String] {
-        [versionText, "Pause recording", "History limit", "Clear all history"]
+        [versionText, "Pause recording", "History limit", "Image size limit", "Clear all history"]
     }
 }

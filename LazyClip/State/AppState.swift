@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 
 @MainActor
@@ -8,6 +9,10 @@ final class AppState: ObservableObject {
         case settings
     }
 
+    enum ContentType {
+        case text, images
+    }
+
     @Published var settings: AppSettings
     @Published var searchText: String
     @Published var items: [ClipboardHistoryItem]
@@ -15,51 +20,73 @@ final class AppState: ObservableObject {
     @Published var currentPage: Page
     @Published var isLoadingMore: Bool
     @Published var isLoadingMoreFavorites: Bool
+    @Published var imageItems: [ImageHistoryItem]
+    @Published var isLoadingMoreImages: Bool
+    @Published var starredImageItems: [ImageHistoryItem]
+    @Published var isLoadingMoreStarredImages: Bool
     @Published var storageErrorMessage: String?
 
     private let settingsRepository: SettingsRepository
     private let historyRepository: HistoryRepository
     private let favoritesRepository: FavoritesRepository
+    private let imageRepository: ImageRepository
     private let clipboardMonitor: ClipboardMonitor
     private(set) var favoritedItemIDs: Set<Int64>
     private var currentOffset: Int
     private var hasMorePages: Bool
     private var favoriteOffset: Int
     private var favoriteHasMorePages: Bool
+    private var imageOffset: Int
+    private var imageHasMorePages: Bool
+    private var starredImageOffset: Int
+    private var starredImageHasMorePages: Bool
+    @Published var historyContentTab: ContentType = .text
+    @Published var favoritesContentTab: ContentType = .text
 
     init(
         settingsRepository: SettingsRepository,
         historyRepository: HistoryRepository,
         favoritesRepository: FavoritesRepository,
+        imageRepository: ImageRepository,
         clipboardMonitor: ClipboardMonitor
     ) {
         self.settingsRepository = settingsRepository
         self.historyRepository = historyRepository
         self.favoritesRepository = favoritesRepository
+        self.imageRepository = imageRepository
         self.clipboardMonitor = clipboardMonitor
-        settings = AppSettings(isPaused: false, historyLimit: AppConfiguration.defaultHistoryLimit)
+        settings = AppSettings(isPaused: false, historyLimit: AppConfiguration.defaultHistoryLimit, imageSizeLimitMB: AppConfiguration.defaultImageSizeLimitMB)
         searchText = ""
         items = []
         favoriteItems = []
+        imageItems = []
+        starredImageItems = []
         currentPage = .history
         isLoadingMore = false
         isLoadingMoreFavorites = false
+        isLoadingMoreImages = false
+        isLoadingMoreStarredImages = false
         storageErrorMessage = nil
         favoritedItemIDs = []
         currentOffset = 0
         hasMorePages = false
         favoriteOffset = 0
         favoriteHasMorePages = false
+        imageOffset = 0
+        imageHasMorePages = false
+        starredImageOffset = 0
+        starredImageHasMorePages = false
     }
 
     func loadInitialData() throws {
         settings = try settingsRepository.load()
         try reloadFirstPage()
         try loadFavorites()
+        try reloadImageFirstPage()
     }
 
     func handleClipboardPoll() throws {
-        guard let value = clipboardMonitor.pollOnce() else {
+        guard let content = clipboardMonitor.pollOnce() else {
             return
         }
 
@@ -67,13 +94,25 @@ final class AppState: ObservableObject {
             return
         }
 
-        if try historyRepository.fetchLatest()?.content == value {
-            return
-        }
+        switch content {
+        case .text(let value):
+            if try historyRepository.fetchLatest()?.content == value {
+                return
+            }
+            _ = try historyRepository.insert(content: value)
+            try historyRepository.trimToLimit(settings.historyLimit)
+            try reloadFirstPage()
+            try refreshLoadedFavoritesIfNeeded()
 
-        _ = try historyRepository.insert(content: value)
-        try historyRepository.trimToLimit(settings.historyLimit)
-        try reloadFirstPage()
+        case .image(let data):
+            let limitBytes = settings.imageSizeLimitMB * 1024 * 1024
+            guard data.count <= limitBytes else { return }
+            let hash = SHA256.hash(data: data).compactMap { String(format: "%02x", $0) }.joined()
+            if try imageRepository.fetchLatest()?.contentHash == hash { return }
+            _ = try imageRepository.insert(imageData: data)
+            try imageRepository.trimToLimit(settings.historyLimit)
+            try reloadImageFirstPage()
+        }
     }
 
     func updateSearchText(_ searchText: String) throws {
@@ -151,9 +190,16 @@ final class AppState: ObservableObject {
     func clearAll() throws {
         try historyRepository.clearAll()
         try favoritesRepository.clearAll()
+        try imageRepository.deleteAll()
         try reloadFirstPage()
         favoriteItems = []
         favoritedItemIDs = []
+        imageItems = []
+        starredImageItems = []
+        imageOffset = 0
+        imageHasMorePages = false
+        starredImageOffset = 0
+        starredImageHasMorePages = false
     }
 
     func updatePauseState(_ isPaused: Bool) throws {
@@ -213,5 +259,93 @@ final class AppState: ObservableObject {
         isLoadingMore = false
         try refreshFavoriteIDs()
         storageErrorMessage = nil
+    }
+
+    // MARK: - Image actions
+
+    func loadNextImagePageIfNeeded(currentItem: ImageHistoryItem) throws {
+        guard currentItem.id == imageItems.last?.id else { return }
+        guard imageHasMorePages, !isLoadingMoreImages else { return }
+        isLoadingMoreImages = true
+        let page = try imageRepository.fetchPage(limit: AppConfiguration.imagePageSize, offset: imageOffset)
+        imageItems.append(contentsOf: page.items)
+        imageOffset += page.items.count
+        imageHasMorePages = page.hasMore
+        isLoadingMoreImages = false
+    }
+
+    func loadNextStarredImagePageIfNeeded(currentItem: ImageHistoryItem) throws {
+        guard currentItem.id == starredImageItems.last?.id else { return }
+        guard starredImageHasMorePages, !isLoadingMoreStarredImages else { return }
+        isLoadingMoreStarredImages = true
+        let page = try imageRepository.fetchStarredPage(limit: AppConfiguration.imagePageSize, offset: starredImageOffset)
+        starredImageItems.append(contentsOf: page.items)
+        starredImageOffset += page.items.count
+        starredImageHasMorePages = page.hasMore
+        isLoadingMoreStarredImages = false
+    }
+
+    func selectImage(item: ImageHistoryItem) throws {
+        clipboardMonitor.copyImageToPasteboard(item.imageData)
+        try imageRepository.markRecopied(id: item.id)
+    }
+
+    func deleteImage(item: ImageHistoryItem) throws {
+        try imageRepository.removeStar(id: item.id)
+        try imageRepository.delete(id: item.id)
+        imageItems.removeAll { $0.id == item.id }
+        starredImageItems.removeAll { $0.id == item.id }
+    }
+
+    func toggleImageStar(item: ImageHistoryItem) throws {
+        if item.isStarred {
+            try imageRepository.removeStar(id: item.id)
+        } else {
+            try imageRepository.addStar(id: item.id)
+        }
+        try reloadImageFirstPage()
+        try reloadStarredImageFirstPage()
+    }
+
+    func updateImageSizeLimit(_ mb: Int) throws {
+        let previousSettings = settings
+        settings.imageSizeLimitMB = mb
+        do {
+            try settingsRepository.save(settings)
+        } catch {
+            settings = previousSettings
+            storageErrorMessage = error.localizedDescription
+            throw error
+        }
+    }
+
+    func switchHistoryContentTab(_ tab: ContentType) throws {
+        historyContentTab = tab
+        if tab == .images {
+            try reloadImageFirstPage()
+        }
+    }
+
+    func switchFavoritesContentTab(_ tab: ContentType) throws {
+        favoritesContentTab = tab
+        if tab == .images {
+            try reloadStarredImageFirstPage()
+        }
+    }
+
+    private func reloadImageFirstPage() throws {
+        let page = try imageRepository.fetchPage(limit: AppConfiguration.imagePageSize, offset: 0)
+        imageItems = page.items
+        imageOffset = page.items.count
+        imageHasMorePages = page.hasMore
+        isLoadingMoreImages = false
+    }
+
+    private func reloadStarredImageFirstPage() throws {
+        let page = try imageRepository.fetchStarredPage(limit: AppConfiguration.imagePageSize, offset: 0)
+        starredImageItems = page.items
+        starredImageOffset = page.items.count
+        starredImageHasMorePages = page.hasMore
+        isLoadingMoreStarredImages = false
     }
 }

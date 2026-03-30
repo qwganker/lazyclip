@@ -19,4 +19,20 @@ final class SystemPasteboardClient: PasteboardClient {
         pasteboard.clearContents()
         pasteboard.setString(value, forType: .string)
     }
+
+    func readImage() -> Data? {
+        if let tiffData = pasteboard.data(forType: .tiff),
+           let rep = NSBitmapImageRep(data: tiffData) {
+            return rep.representation(using: .png, properties: [:])
+        }
+        if let pngData = pasteboard.data(forType: .png) {
+            return pngData
+        }
+        return nil
+    }
+
+    func writeImage(_ data: Data) {
+        pasteboard.clearContents()
+        pasteboard.setData(data, forType: .png)
+    }
 }

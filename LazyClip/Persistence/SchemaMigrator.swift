@@ -37,6 +37,33 @@ enum SchemaMigrator {
             """
             CREATE INDEX IF NOT EXISTS idx_favorite_items_favorited_at
             ON favorite_items (favorited_at DESC, history_item_id DESC);
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS image_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                image_data BLOB NOT NULL,
+                content_hash TEXT NOT NULL,
+                captured_at INTEGER NOT NULL,
+                last_recopied_at INTEGER
+            );
+            """,
+            """
+            CREATE INDEX IF NOT EXISTS idx_image_history_captured_at
+            ON image_history (captured_at DESC, id DESC);
+            """,
+            """
+            CREATE INDEX IF NOT EXISTS idx_image_history_content_hash
+            ON image_history (content_hash);
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS image_favorite_items (
+                image_history_id INTEGER PRIMARY KEY,
+                favorited_at INTEGER NOT NULL
+            );
+            """,
+            """
+            CREATE INDEX IF NOT EXISTS idx_image_favorite_items_favorited_at
+            ON image_favorite_items (favorited_at DESC, image_history_id DESC);
             """
         ]
 

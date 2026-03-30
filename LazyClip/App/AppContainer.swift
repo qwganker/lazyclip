@@ -9,6 +9,7 @@ struct AppContainer {
         let settingsRepository = try SettingsRepository(databasePath: paths.databaseURL)
         let historyRepository = try HistoryRepository(databasePath: paths.databaseURL)
         let favoritesRepository = try FavoritesRepository(databasePath: paths.databaseURL)
+        let imageRepository = try ImageRepository(databasePath: paths.databaseURL)
         let clipboardMonitor = ClipboardMonitor(
             pasteboard: SystemPasteboardClient(),
             pollInterval: AppConfiguration.pasteboardPollInterval
@@ -18,6 +19,7 @@ struct AppContainer {
             settingsRepository: settingsRepository,
             historyRepository: historyRepository,
             favoritesRepository: favoritesRepository,
+            imageRepository: imageRepository,
             clipboardMonitor: clipboardMonitor
         )
     }

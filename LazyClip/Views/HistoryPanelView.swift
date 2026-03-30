@@ -28,8 +28,16 @@ struct HistoryPanelView: View {
             }
 
             VStack(spacing: 6) {
-                TextField("Search clipboard history", text: searchBinding)
-                    .textFieldStyle(.roundedBorder)
+                if appState.historyContentTab == .text {
+                    TextField("Search clipboard history", text: searchBinding)
+                        .textFieldStyle(.roundedBorder)
+                }
+
+                Picker("", selection: historyContentTabBinding) {
+                    Text("Text").tag(AppState.ContentType.text)
+                    Text("Images").tag(AppState.ContentType.images)
+                }
+                .pickerStyle(.segmented)
 
                 if let storageErrorMessage = appState.storageErrorMessage {
                     Text(storageErrorMessage)
@@ -43,15 +51,19 @@ struct HistoryPanelView: View {
             .padding(.bottom, 4)
             .background(Color(nsColor: .windowBackgroundColor))
 
-            if appState.items.isEmpty {
-                ContentUnavailableView(
-                    "No Clipboard History",
-                    systemImage: "doc.on.clipboard",
-                    description: Text("Copied text will appear here.")
-                )
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            if appState.historyContentTab == .text {
+                if appState.items.isEmpty {
+                    ContentUnavailableView(
+                        "No Clipboard History",
+                        systemImage: "doc.on.clipboard",
+                        description: Text("Copied text will appear here.")
+                    )
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    HistoryListView(appState: appState)
+                }
             } else {
-                HistoryListView(appState: appState)
+                ImagesListView(appState: appState)
             }
         }
     }
@@ -61,24 +73,86 @@ struct HistoryPanelView: View {
             favoritesHeader
             Divider()
 
-            if let storageErrorMessage = appState.storageErrorMessage {
-                Text(storageErrorMessage)
-                    .font(.caption)
-                    .foregroundStyle(.red)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 12)
-                    .padding(.top, 10)
-            }
+            VStack(spacing: 6) {
+                Picker("", selection: favoritesContentTabBinding) {
+                    Text("Text").tag(AppState.ContentType.text)
+                    Text("Images").tag(AppState.ContentType.images)
+                }
+                .pickerStyle(.segmented)
 
-            if appState.favoriteItems.isEmpty {
-                FavoritesEmptyStateView()
+                if let storageErrorMessage = appState.storageErrorMessage {
+                    Text(storageErrorMessage)
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.top, 10)
+            .padding(.bottom, 4)
+            .background(Color(nsColor: .windowBackgroundColor))
+
+            if appState.favoritesContentTab == .text {
+                if appState.favoriteItems.isEmpty {
+                    FavoritesEmptyStateView()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    FavoritesListView(appState: appState)
+                }
             } else {
-                FavoritesListView(appState: appState)
+                starredImagesContent
             }
         }
-        .task {
-            if appState.favoriteItems.isEmpty {
-                try? appState.loadFavorites()
+    }
+
+    private var starredImagesContent: some View {
+        Group {
+            if appState.starredImageItems.isEmpty {
+                ContentUnavailableView(
+                    "No Starred Images",
+                    systemImage: "star",
+                    description: Text("Star an image to keep it here.")
+                )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                ScrollView {
+                    LazyVStack(spacing: 4) {
+                        ForEach(appState.starredImageItems) { item in
+                            ImageRowView(
+                                item: item,
+                                onSelect: {
+                                    do {
+                                        try appState.selectImage(item: item)
+                                    } catch {
+                                        appState.storageErrorMessage = error.localizedDescription
+                                    }
+                                },
+                                onToggleStar: {
+                                    do {
+                                        try appState.toggleImageStar(item: item)
+                                    } catch {
+                                        appState.storageErrorMessage = error.localizedDescription
+                                    }
+                                },
+                                onDelete: nil
+                            )
+                            .onAppear {
+                                do {
+                                    try appState.loadNextStarredImagePageIfNeeded(currentItem: item)
+                                } catch {
+                                    appState.storageErrorMessage = error.localizedDescription
+                                }
+                            }
+                        }
+
+                        if appState.isLoadingMoreStarredImages {
+                            ProgressView()
+                                .padding(.vertical, 8)
+                        }
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.bottom, 8)
+                }
             }
         }
     }
@@ -93,7 +167,7 @@ struct HistoryPanelView: View {
 
     private var historyHeader: some View {
         HStack(spacing: 12) {
-            Label("LazyClip", image: "MenuBarIcon")
+            Text("Clipboard History")
                 .font(.headline)
 
             Spacer()
@@ -132,7 +206,7 @@ struct HistoryPanelView: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .help("Back to History")
+            .help("Back")
 
             Text("Favorites")
                 .font(.headline)
@@ -180,6 +254,32 @@ struct HistoryPanelView: View {
             set: { newValue in
                 do {
                     try appState.updateSearchText(newValue)
+                } catch {
+                    appState.storageErrorMessage = error.localizedDescription
+                }
+            }
+        )
+    }
+
+    private var historyContentTabBinding: Binding<AppState.ContentType> {
+        Binding(
+            get: { appState.historyContentTab },
+            set: { tab in
+                do {
+                    try appState.switchHistoryContentTab(tab)
+                } catch {
+                    appState.storageErrorMessage = error.localizedDescription
+                }
+            }
+        )
+    }
+
+    private var favoritesContentTabBinding: Binding<AppState.ContentType> {
+        Binding(
+            get: { appState.favoritesContentTab },
+            set: { tab in
+                do {
+                    try appState.switchFavoritesContentTab(tab)
                 } catch {
                     appState.storageErrorMessage = error.localizedDescription
                 }

@@ -5,14 +5,14 @@ import XCTest
 final class AppStateTests: XCTestCase {
     func testLoadInitialDataLoadsPersistedSettingsAndFirstPage() throws {
         let harness = try AppStateHarness()
-        try harness.settingsRepository.save(AppSettings(isPaused: true, historyLimit: 250))
+        try harness.settingsRepository.save(AppSettings(isPaused: true, historyLimit: 250, imageSizeLimitMB: 10))
         _ = try harness.historyRepository.insert(content: "first")
         _ = try harness.historyRepository.insert(content: "second")
 
         let state = harness.makeAppState()
         try state.loadInitialData()
 
-        XCTAssertEqual(state.settings, AppSettings(isPaused: true, historyLimit: 250))
+        XCTAssertEqual(state.settings, AppSettings(isPaused: true, historyLimit: 250, imageSizeLimitMB: 10))
         XCTAssertEqual(state.items.map(\.content), ["second", "first"])
         XCTAssertFalse(state.isLoadingMore)
         XCTAssertNil(state.storageErrorMessage)
@@ -20,7 +20,7 @@ final class AppStateTests: XCTestCase {
 
     func testHandleClipboardPollDoesNotInsertWhenPaused() throws {
         let harness = try AppStateHarness()
-        try harness.settingsRepository.save(AppSettings(isPaused: true, historyLimit: 500))
+        try harness.settingsRepository.save(AppSettings(isPaused: true, historyLimit: 500, imageSizeLimitMB: 10))
         let state = harness.makeAppState()
         try state.loadInitialData()
 
@@ -65,7 +65,7 @@ final class AppStateTests: XCTestCase {
 
     func testHandleClipboardPollInsertsAndTrimsToConfiguredLimit() throws {
         let harness = try AppStateHarness()
-        try harness.settingsRepository.save(AppSettings(isPaused: false, historyLimit: 2))
+        try harness.settingsRepository.save(AppSettings(isPaused: false, historyLimit: 2, imageSizeLimitMB: 10))
         _ = try harness.historyRepository.insert(content: "one")
         _ = try harness.historyRepository.insert(content: "two")
 

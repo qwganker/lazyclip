@@ -15,14 +15,15 @@ final class SettingsRepository {
         let count = try settingsCount(in: database)
 
         if count == 0 {
-            let defaults = AppSettings(isPaused: false, historyLimit: AppConfiguration.defaultHistoryLimit)
+            let defaults = AppSettings(isPaused: false, historyLimit: AppConfiguration.defaultHistoryLimit, imageSizeLimitMB: AppConfiguration.defaultImageSizeLimitMB)
             try save(defaults)
             return defaults
         }
 
         return AppSettings(
             isPaused: try loadBool(forKey: "is_paused", defaultValue: false, in: database),
-            historyLimit: try loadInt(forKey: "history_limit", defaultValue: AppConfiguration.defaultHistoryLimit, in: database)
+            historyLimit: try loadInt(forKey: "history_limit", defaultValue: AppConfiguration.defaultHistoryLimit, in: database),
+            imageSizeLimitMB: try loadInt(forKey: "image_size_limit_mb", defaultValue: AppConfiguration.defaultImageSizeLimitMB, in: database)
         )
     }
 
@@ -30,6 +31,7 @@ final class SettingsRepository {
         let database = databaseManager.database
         try saveValue(settings.isPaused ? "1" : "0", forKey: "is_paused", in: database)
         try saveValue(String(settings.historyLimit), forKey: "history_limit", in: database)
+        try saveValue(String(settings.imageSizeLimitMB), forKey: "image_size_limit_mb", in: database)
     }
 
     private func settingsCount(in database: OpaquePointer?) throws -> Int {

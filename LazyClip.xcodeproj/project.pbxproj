@@ -42,6 +42,10 @@
 		9F1000000000000000000003 /* FavoritesRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F1000000000000000000013 /* FavoritesRepository.swift */; };
 		9F1000000000000000000004 /* FavoritesListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F1000000000000000000014 /* FavoritesListView.swift */; };
 		9F1000000000000000000005 /* FavoritesEmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F1000000000000000000015 /* FavoritesEmptyStateView.swift */; };
+		9F2000000000000000000001 /* ImageHistoryItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F2000000000000000000011 /* ImageHistoryItem.swift */; };
+		9F2000000000000000000002 /* ImageRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F2000000000000000000012 /* ImageRepository.swift */; };
+		9F2000000000000000000003 /* ImageRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F2000000000000000000013 /* ImageRowView.swift */; };
+		9F2000000000000000000004 /* ImagesListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F2000000000000000000014 /* ImagesListView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -93,6 +97,10 @@
 		9F1000000000000000000014 /* FavoritesListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoritesListView.swift; sourceTree = "<group>"; };
 		9F1000000000000000000015 /* FavoritesEmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoritesEmptyStateView.swift; sourceTree = "<group>"; };
 		9F1000000000000000000016 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		9F2000000000000000000011 /* ImageHistoryItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageHistoryItem.swift; sourceTree = "<group>"; };
+		9F2000000000000000000012 /* ImageRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageRepository.swift; sourceTree = "<group>"; };
+		9F2000000000000000000013 /* ImageRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageRowView.swift; sourceTree = "<group>"; };
+		9F2000000000000000000014 /* ImagesListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagesListView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -178,6 +186,7 @@
 				1A2B3C4D5E6F708192A3D00F /* ClipboardHistoryItem.swift */,
 				9F1000000000000000000012 /* FavoriteHistoryItem.swift */,
 				1A2B3C4D5E6F708192A3D012 /* HistoryPage.swift */,
+				9F2000000000000000000011 /* ImageHistoryItem.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -191,6 +200,7 @@
 				1A2B3C4D5E6F708192A3D00B /* SettingsRepository.swift */,
 				1A2B3C4D5E6F708192A3D010 /* HistoryRepository.swift */,
 				9F1000000000000000000013 /* FavoritesRepository.swift */,
+				9F2000000000000000000012 /* ImageRepository.swift */,
 			);
 			path = Persistence;
 			sourceTree = "<group>";
@@ -231,6 +241,8 @@
 				1A2B3C4D5E6F708192A3D01E /* HistoryRowView.swift */,
 				9F1000000000000000000014 /* FavoritesListView.swift */,
 				9F1000000000000000000015 /* FavoritesEmptyStateView.swift */,
+				9F2000000000000000000013 /* ImageRowView.swift */,
+				9F2000000000000000000014 /* ImagesListView.swift */,
 				1A2B3C4D5E6F708192A3D01F /* PausedBannerView.swift */,
 				1A2B3C4D5E6F708192A3D020 /* SettingsView.swift */,
 			);
@@ -356,6 +368,10 @@
 				1A2B3C4D5E6F708192A3E01B /* HistoryRowView.swift in Sources */,
 				9F1000000000000000000004 /* FavoritesListView.swift in Sources */,
 				9F1000000000000000000005 /* FavoritesEmptyStateView.swift in Sources */,
+				9F2000000000000000000001 /* ImageHistoryItem.swift in Sources */,
+				9F2000000000000000000002 /* ImageRepository.swift in Sources */,
+				9F2000000000000000000003 /* ImageRowView.swift in Sources */,
+				9F2000000000000000000004 /* ImagesListView.swift in Sources */,
 				1A2B3C4D5E6F708192A3E01C /* PausedBannerView.swift in Sources */,
 				1A2B3C4D5E6F708192A3E01D /* SettingsView.swift in Sources */,
 				1A2B3C4D5E6F708192A3E001 /* LazyClipApp.swift in Sources */,

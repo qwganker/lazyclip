@@ -1,5 +1,10 @@
 import Foundation
 
+enum ClipboardContent: Equatable {
+    case text(String)
+    case image(Data)
+}
+
 final class ClipboardMonitor {
     private let pasteboard: PasteboardClient
     private let pollInterval: TimeInterval
@@ -12,7 +17,7 @@ final class ClipboardMonitor {
         lastSeenChangeCount = pasteboard.changeCount
     }
 
-    func pollOnce() -> String? {
+    func pollOnce() -> ClipboardContent? {
         let currentChangeCount = pasteboard.changeCount
 
         guard currentChangeCount > lastSeenChangeCount else {
@@ -28,15 +33,24 @@ final class ClipboardMonitor {
 
         ignoredSelfWrittenChangeCount = nil
 
-        guard let value = pasteboard.readString(), value.isEmpty == false else {
-            return nil
+        if let value = pasteboard.readString(), value.isEmpty == false {
+            return .text(value)
         }
 
-        return value
+        if let imageData = pasteboard.readImage() {
+            return .image(imageData)
+        }
+
+        return nil
     }
 
     func copyToPasteboard(_ value: String) {
         pasteboard.writeString(value)
+        ignoredSelfWrittenChangeCount = pasteboard.changeCount
+    }
+
+    func copyImageToPasteboard(_ data: Data) {
+        pasteboard.writeImage(data)
         ignoredSelfWrittenChangeCount = pasteboard.changeCount
     }
 }
