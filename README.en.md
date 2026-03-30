@@ -1,4 +1,4 @@
-# LazyClip | [中文](./README.en.md)
+# <img src="./icons/jiantie.png" alt="history" height="25" width="25"/>  LazyClip | [中文](./README.md)
 
 LazyClip is a lightweight, native, local-only clipboard history app for the macOS menu bar.
 

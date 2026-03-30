@@ -1,4 +1,4 @@
-# LazyClip | [English](./README.en.md)
+# <img src="./icons/jiantie.png" alt="history" height="25" width="25"/> LazyClip | [English](./README.en.md)
 
 LazyClip 一个轻量、原生、仅本地存储的 macOS 菜单栏剪贴板历史工具
 
