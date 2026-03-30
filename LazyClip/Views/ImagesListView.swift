@@ -26,6 +26,7 @@ struct ImagesListView: View {
                         ForEach(appState.imageItems) { item in
                             ImageRowView(
                                 item: item,
+                                fetchImageData: { id in try appState.fetchImageData(id: id) },
                                 onSelect: {
                                     do {
                                         try appState.selectImage(item: item)
@@ -49,11 +50,7 @@ struct ImagesListView: View {
                                 }
                             )
                             .onAppear {
-                                do {
-                                    try appState.loadNextImagePageIfNeeded(currentItem: item)
-                                } catch {
-                                    appState.storageErrorMessage = error.localizedDescription
-                                }
+                                appState.loadNextImagePageIfNeeded(currentItem: item)
                             }
                         }
 

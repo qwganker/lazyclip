@@ -44,7 +44,6 @@ final class ImageRepository {
 
         return ImageHistoryItem(
             id: sqlite3_last_insert_rowid(database),
-            imageData: imageData,
             contentHash: contentHash,
             capturedAt: capturedAt,
             lastRecopiedAt: nil,
@@ -58,7 +57,7 @@ final class ImageRepository {
         defer { sqlite3_finalize(statement) }
 
         let sql = """
-        SELECT h.id, h.image_data, h.content_hash, h.captured_at, h.last_recopied_at,
+        SELECT h.id, h.content_hash, h.captured_at, h.last_recopied_at,
                CASE WHEN f.image_history_id IS NOT NULL THEN 1 ELSE 0 END AS is_starred
         FROM image_history h
         LEFT JOIN image_favorite_items f ON f.image_history_id = h.id
@@ -87,7 +86,7 @@ final class ImageRepository {
         defer { sqlite3_finalize(statement) }
 
         let sql = """
-        SELECT h.id, h.image_data, h.content_hash, h.captured_at, h.last_recopied_at,
+        SELECT h.id, h.content_hash, h.captured_at, h.last_recopied_at,
                CASE WHEN f.image_history_id IS NOT NULL THEN 1 ELSE 0 END AS is_starred
         FROM image_history h
         LEFT JOIN image_favorite_items f ON f.image_history_id = h.id
@@ -119,7 +118,7 @@ final class ImageRepository {
         defer { sqlite3_finalize(statement) }
 
         let sql = """
-        SELECT h.id, h.image_data, h.content_hash, h.captured_at, h.last_recopied_at,
+        SELECT h.id, h.content_hash, h.captured_at, h.last_recopied_at,
                1 AS is_starred
         FROM image_history h
         INNER JOIN image_favorite_items f ON f.image_history_id = h.id
@@ -242,23 +241,34 @@ final class ImageRepository {
         }
     }
 
+    func fetchImageData(id: Int64) throws -> Data? {
+        let database = databaseManager.database
+        var statement: OpaquePointer?
+        defer { sqlite3_finalize(statement) }
+
+        let sql = "SELECT image_data FROM image_history WHERE id = ?"
+        guard sqlite3_prepare_v2(database, sql, -1, &statement, nil) == SQLITE_OK else {
+            throw DatabaseError.prepareFailed(message: DatabaseManager.errorMessage(from: database))
+        }
+        sqlite3_bind_int64(statement, 1, id)
+        guard sqlite3_step(statement) == SQLITE_ROW else { return nil }
+        guard let ptr = sqlite3_column_blob(statement, 0) else { return nil }
+        let size = sqlite3_column_bytes(statement, 0)
+        return Data(bytes: ptr, count: Int(size))
+    }
+
     private func makeItem(from statement: OpaquePointer?) -> ImageHistoryItem? {
-        guard sqlite3_column_type(statement, 1) != SQLITE_NULL,
-              let hashCString = sqlite3_column_text(statement, 2) else {
+        guard let hashCString = sqlite3_column_text(statement, 1) else {
             return nil
         }
         let id = sqlite3_column_int64(statement, 0)
-        let blobPtr = sqlite3_column_blob(statement, 1)
-        let blobSize = sqlite3_column_bytes(statement, 1)
-        let imageData = blobPtr.map { Data(bytes: $0, count: Int(blobSize)) } ?? Data()
-        let capturedAt = Date(timeIntervalSince1970: TimeInterval(sqlite3_column_int64(statement, 3)))
-        let lastRecopiedAt: Date? = sqlite3_column_type(statement, 4) == SQLITE_NULL
+        let capturedAt = Date(timeIntervalSince1970: TimeInterval(sqlite3_column_int64(statement, 2)))
+        let lastRecopiedAt: Date? = sqlite3_column_type(statement, 3) == SQLITE_NULL
             ? nil
-            : Date(timeIntervalSince1970: TimeInterval(sqlite3_column_int64(statement, 4)))
-        let isStarred = sqlite3_column_int(statement, 5) != 0
+            : Date(timeIntervalSince1970: TimeInterval(sqlite3_column_int64(statement, 3)))
+        let isStarred = sqlite3_column_int(statement, 4) != 0
         return ImageHistoryItem(
             id: id,
-            imageData: imageData,
             contentHash: String(cString: hashCString),
             capturedAt: capturedAt,
             lastRecopiedAt: lastRecopiedAt,

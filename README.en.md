@@ -4,13 +4,13 @@ LazyClip is a lightweight, native, local-only clipboard history app for the macO
 
 ## Screenshots
 
-<img src="./docs/imgs/image.png" alt="history" height="600" />
-
+<img src="./docs/imgs/image.png" alt="history" height="400" width="600"/>
+<img src="./docs/imgs/image2.png" alt="history" height="400" width="600" />
 
 ## Features
 
 - Always available from the menu bar, so you can open the history panel at any time
-- Automatically records plain-text clipboard history
+- Automatically records plain-text/images clipboard history
 - Persists data locally with SQLite
 - Searches clipboard history
 - Click an item to copy it back to the system clipboard

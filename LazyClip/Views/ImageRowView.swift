@@ -3,12 +3,14 @@ import SwiftUI
 
 struct ImageRowView: View {
     let item: ImageHistoryItem
+    let fetchImageData: (Int64) throws -> Data?
     let onSelect: () -> Void
     let onToggleStar: () -> Void
     let onDelete: (() -> Void)?
 
     @State private var isHovered = false
     @State private var isPressed = false
+    @State private var thumbnail: NSImage?
 
     var body: some View {
         HStack(alignment: .center, spacing: 12) {
@@ -55,7 +57,7 @@ struct ImageRowView: View {
 
     private var thumbnailView: some View {
         Group {
-            if let nsImage = NSImage(data: item.imageData) {
+            if let nsImage = thumbnail {
                 Image(nsImage: nsImage)
                     .resizable()
                     .scaledToFill()
@@ -71,6 +73,23 @@ struct ImageRowView: View {
                             .foregroundStyle(.secondary)
                     }
             }
+        }
+        .task(id: item.id) {
+            if let cached = ThumbnailCache.shared.thumbnail(for: item.id) {
+                thumbnail = cached
+                return
+            }
+            let itemID = item.id
+            // Fetch data on MainActor (SQLite is not thread-safe)
+            guard let data = try? fetchImageData(itemID) else { return }
+            // Decode NSImage off the main thread
+            let image = await Task.detached(priority: .userInitiated) {
+                NSImage(data: data)
+            }.value
+            if let image {
+                ThumbnailCache.shared.store(image, for: itemID)
+            }
+            thumbnail = image
         }
     }
 

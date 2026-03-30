@@ -191,6 +191,7 @@ final class AppState: ObservableObject {
         try historyRepository.clearAll()
         try favoritesRepository.clearAll()
         try imageRepository.deleteAll()
+        ThumbnailCache.shared.removeAll()
         try reloadFirstPage()
         favoriteItems = []
         favoritedItemIDs = []
@@ -263,30 +264,43 @@ final class AppState: ObservableObject {
 
     // MARK: - Image actions
 
-    func loadNextImagePageIfNeeded(currentItem: ImageHistoryItem) throws {
+    func loadNextImagePageIfNeeded(currentItem: ImageHistoryItem) {
         guard currentItem.id == imageItems.last?.id else { return }
         guard imageHasMorePages, !isLoadingMoreImages else { return }
         isLoadingMoreImages = true
-        let page = try imageRepository.fetchPage(limit: AppConfiguration.imagePageSize, offset: imageOffset)
-        imageItems.append(contentsOf: page.items)
-        imageOffset += page.items.count
-        imageHasMorePages = page.hasMore
+        do {
+            let page = try imageRepository.fetchPage(limit: AppConfiguration.imagePageSize, offset: imageOffset)
+            imageItems.append(contentsOf: page.items)
+            imageOffset += page.items.count
+            imageHasMorePages = page.hasMore
+        } catch {
+            storageErrorMessage = error.localizedDescription
+        }
         isLoadingMoreImages = false
     }
 
-    func loadNextStarredImagePageIfNeeded(currentItem: ImageHistoryItem) throws {
+    func loadNextStarredImagePageIfNeeded(currentItem: ImageHistoryItem) {
         guard currentItem.id == starredImageItems.last?.id else { return }
         guard starredImageHasMorePages, !isLoadingMoreStarredImages else { return }
         isLoadingMoreStarredImages = true
-        let page = try imageRepository.fetchStarredPage(limit: AppConfiguration.imagePageSize, offset: starredImageOffset)
-        starredImageItems.append(contentsOf: page.items)
-        starredImageOffset += page.items.count
-        starredImageHasMorePages = page.hasMore
+        do {
+            let page = try imageRepository.fetchStarredPage(limit: AppConfiguration.imagePageSize, offset: starredImageOffset)
+            starredImageItems.append(contentsOf: page.items)
+            starredImageOffset += page.items.count
+            starredImageHasMorePages = page.hasMore
+        } catch {
+            storageErrorMessage = error.localizedDescription
+        }
         isLoadingMoreStarredImages = false
     }
 
+    func fetchImageData(id: Int64) throws -> Data? {
+        try imageRepository.fetchImageData(id: id)
+    }
+
     func selectImage(item: ImageHistoryItem) throws {
-        clipboardMonitor.copyImageToPasteboard(item.imageData)
+        guard let data = try imageRepository.fetchImageData(id: item.id) else { return }
+        clipboardMonitor.copyImageToPasteboard(data)
         try imageRepository.markRecopied(id: item.id)
     }
 
@@ -300,11 +314,19 @@ final class AppState: ObservableObject {
     func toggleImageStar(item: ImageHistoryItem) throws {
         if item.isStarred {
             try imageRepository.removeStar(id: item.id)
+            if let idx = imageItems.firstIndex(where: { $0.id == item.id }) {
+                imageItems[idx].isStarred = false
+            }
+            starredImageItems.removeAll { $0.id == item.id }
         } else {
             try imageRepository.addStar(id: item.id)
+            if let idx = imageItems.firstIndex(where: { $0.id == item.id }) {
+                imageItems[idx].isStarred = true
+            }
+            var starred = item
+            starred.isStarred = true
+            starredImageItems.insert(starred, at: 0)
         }
-        try reloadImageFirstPage()
-        try reloadStarredImageFirstPage()
     }
 
     func updateImageSizeLimit(_ mb: Int) throws {

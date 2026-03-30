@@ -29,6 +29,7 @@
 		1A2B3C4D5E6F708192A3E014 /* ClipboardMonitorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F708192A3D017 /* ClipboardMonitorTests.swift */; };
 		1A2B3C4D5E6F708192A3E015 /* AppContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F708192A3D018 /* AppContainer.swift */; };
 		1A2B3C4D5E6F708192A3E016 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F708192A3D019 /* AppState.swift */; };
+		9F3000000000000000000001 /* ThumbnailCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F3000000000000000000002 /* ThumbnailCache.swift */; };
 		1A2B3C4D5E6F708192A3E017 /* AppStateHarness.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F708192A3D01A /* AppStateHarness.swift */; };
 		1A2B3C4D5E6F708192A3E018 /* AppStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F708192A3D01B /* AppStateTests.swift */; };
 		1A2B3C4D5E6F708192A3E019 /* HistoryPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F708192A3D01C /* HistoryPanelView.swift */; };
@@ -84,6 +85,7 @@
 		1A2B3C4D5E6F708192A3D017 /* ClipboardMonitorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardMonitorTests.swift; sourceTree = "<group>"; };
 		1A2B3C4D5E6F708192A3D018 /* AppContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppContainer.swift; sourceTree = "<group>"; };
 		1A2B3C4D5E6F708192A3D019 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		9F3000000000000000000002 /* ThumbnailCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbnailCache.swift; sourceTree = "<group>"; };
 		1A2B3C4D5E6F708192A3D01A /* AppStateHarness.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStateHarness.swift; sourceTree = "<group>"; };
 		1A2B3C4D5E6F708192A3D01B /* AppStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStateTests.swift; sourceTree = "<group>"; };
 		1A2B3C4D5E6F708192A3D01C /* HistoryPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryPanelView.swift; sourceTree = "<group>"; };
@@ -229,6 +231,7 @@
 			isa = PBXGroup;
 			children = (
 				1A2B3C4D5E6F708192A3D019 /* AppState.swift */,
+				9F3000000000000000000002 /* ThumbnailCache.swift */,
 			);
 			path = State;
 			sourceTree = "<group>";
@@ -363,6 +366,7 @@
 				1A2B3C4D5E6F708192A3E002 /* AppConfiguration.swift in Sources */,
 				1A2B3C4D5E6F708192A3E015 /* AppContainer.swift in Sources */,
 				1A2B3C4D5E6F708192A3E016 /* AppState.swift in Sources */,
+				9F3000000000000000000001 /* ThumbnailCache.swift in Sources */,
 				1A2B3C4D5E6F708192A3E019 /* HistoryPanelView.swift in Sources */,
 				1A2B3C4D5E6F708192A3E01A /* HistoryListView.swift in Sources */,
 				1A2B3C4D5E6F708192A3E01B /* HistoryRowView.swift in Sources */,

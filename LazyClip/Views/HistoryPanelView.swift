@@ -120,6 +120,7 @@ struct HistoryPanelView: View {
                         ForEach(appState.starredImageItems) { item in
                             ImageRowView(
                                 item: item,
+                                fetchImageData: { id in try appState.fetchImageData(id: id) },
                                 onSelect: {
                                     do {
                                         try appState.selectImage(item: item)
@@ -137,11 +138,7 @@ struct HistoryPanelView: View {
                                 onDelete: nil
                             )
                             .onAppear {
-                                do {
-                                    try appState.loadNextStarredImagePageIfNeeded(currentItem: item)
-                                } catch {
-                                    appState.storageErrorMessage = error.localizedDescription
-                                }
+                                appState.loadNextStarredImagePageIfNeeded(currentItem: item)
                             }
                         }
 
