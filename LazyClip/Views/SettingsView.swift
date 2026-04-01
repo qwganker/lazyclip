@@ -15,7 +15,7 @@ struct SettingsView: View {
                 Toggle("Pause recording", isOn: pauseBinding)
 
                 Picker("History limit", selection: historyLimitBinding) {
-                    ForEach([100, 500, 1000, 5000], id: \.self) { limit in
+                    ForEach([20, 50, 100, 500, 1000, 5000], id: \.self) { limit in
                         Text("\(limit)").tag(limit)
                     }
                 }
